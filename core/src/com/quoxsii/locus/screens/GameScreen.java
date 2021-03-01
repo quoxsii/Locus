@@ -17,12 +17,11 @@ import java.util.Random;
 
 public class GameScreen implements Screen {
     //Texture img;
-    private static final float MAX_ACTOR_SPEED = 180;
-    private static final float ACTOR_ACCELERATION_TIME = 0.2f;
     private static final int ACTOR_WIDTH = 210;
     private static final int ACTOR_HEIGHT = 458;
     private static final float ACTOR_SCALE = 0.25f;
     private static final float ACTOR_ANIMATION_TIME = 0.05f;
+    private static final int ACTOR_SPEED_MULTIPLIER = 4;
     private static final float ACTOR_ROTATION_SPEED = 0.7f;
 
     private static final float MIN_ASTEROID_SPAWN_TIME = 0.5f;
@@ -30,11 +29,10 @@ public class GameScreen implements Screen {
 
     Animation[] rolls;
 
-    float x = Main.GAME_WIDTH / 2 - ACTOR_WIDTH * ACTOR_SCALE / 2;
+    float x = Main.GAME_WIDTH / 2 - ACTOR_WIDTH * (ACTOR_SCALE / 2);
     float y = 10;
     float rotation;
     int speed;
-    float acceleration = ACTOR_ACCELERATION_TIME;
     int roll;
     float stateTime;
     float asteroidSpawnTimer;
@@ -77,118 +75,25 @@ public class GameScreen implements Screen {
         Gdx.gl.glClearColor(0.04f, 0.06f, 0.15f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        rolls[roll] = new Animation(ACTOR_ANIMATION_TIME, rollSpriteSheet[0]);
-
-        if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
-            this.dispose();
-            game.setScreen(new MenuScreen(game));
+        // controls
+        if (!Gdx.input.isKeyPressed(Input.Keys.LEFT) && !Gdx.input.isKeyPressed(Input.Keys.RIGHT)
+        || Gdx.input.isKeyPressed(Input.Keys.LEFT) && Gdx.input.isKeyPressed(Input.Keys.RIGHT)
+        || Gdx.input.isKeyPressed(Input.Keys.LEFT) && rotation < 0
+        || Gdx.input.isKeyPressed(Input.Keys.RIGHT) && rotation > 0) {
+            rotation += rotation > 0 ? -ACTOR_ROTATION_SPEED : ACTOR_ROTATION_SPEED;
+            if (rotation < 1 && rotation > 0 || rotation > -1 && rotation < 0) rotation = 0;
         }
 
-        boolean controllable = true;
-
-        if (rotation > 0 && !Gdx.input.isKeyPressed(Input.Keys.LEFT)
-                || Gdx.input.isKeyPressed(Input.Keys.LEFT) && Gdx.input.isKeyPressed(Input.Keys.RIGHT) && rotation > 0) {
-            /*x -= ACTOR_SPEED * ACTOR_ROTATION_SPEED * Gdx.graphics.getDeltaTime();
-            rotation -= 0.5;*/
-
-            rolls[roll] = new Animation(ACTOR_ANIMATION_TIME, rollSpriteSheet[2]);
-
-            controllable = false;
-
-            acceleration -= delta;
-            if (acceleration <= 0) {
-                acceleration = ACTOR_ACCELERATION_TIME;
-                if (speed > 0) speed -= 40;
-            }
-
-            x -= speed * Gdx.graphics.getDeltaTime();
-            rotation -= 0.5f;
-
-            if (rotation > 0.1f && rotation < 1f) rotation = 0;
-
-            if (x < 0) {
-                x = 0;
-            }
+        if (Gdx.input.isKeyPressed(Input.Keys.LEFT) && !Gdx.input.isKeyPressed(Input.Keys.RIGHT) && rotation >= 0 && rotation < 50) {
+            rotation += ACTOR_ROTATION_SPEED;
         }
 
-        if (rotation < 0 && !Gdx.input.isKeyPressed(Input.Keys.RIGHT)
-                || Gdx.input.isKeyPressed(Input.Keys.LEFT) && Gdx.input.isKeyPressed(Input.Keys.RIGHT) && rotation < 0) {
-            /*x += ACTOR_SPEED * ACTOR_ROTATION_SPEED * Gdx.graphics.getDeltaTime();
-            rotation += 0.5;*/
-
-            rolls[roll] = new Animation(ACTOR_ANIMATION_TIME, rollSpriteSheet[1]);
-
-            controllable = false;
-
-            acceleration -= delta;
-            if (acceleration <= 0) {
-                acceleration = ACTOR_ACCELERATION_TIME;
-                if (speed > 0) speed -= 40;
-            }
-
-            x += speed * Gdx.graphics.getDeltaTime();
-            rotation += 0.5f;
-
-            if (rotation < -0.1f && rotation > -1f) rotation = 0;
-
-            if (x > Main.GAME_WIDTH - ACTOR_WIDTH * ACTOR_SCALE) {
-                x = Main.GAME_WIDTH - ACTOR_WIDTH * ACTOR_SCALE;
-            }
+        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) && !Gdx.input.isKeyPressed(Input.Keys.LEFT) && rotation <= 0 && rotation > -50) {
+            rotation -= ACTOR_ROTATION_SPEED;
         }
 
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT) && controllable) {
-            /*if (rotation > 0) {
-                if (rotation < 15) {
-                    x -= ACTOR_SPEED * ACTOR_ROTATION_SPEED * Gdx.graphics.getDeltaTime();
-                }
-                else x -= ACTOR_SPEED * Gdx.graphics.getDeltaTime();
-            }
-            if (rotation < 30) rotation += ACTOR_ROTATION_SPEED;*/
-
-            rolls[roll] = new Animation(ACTOR_ANIMATION_TIME, rollSpriteSheet[1]);
-
-            if (rotation < 30) rotation += ACTOR_ROTATION_SPEED;
-
-            acceleration -= delta;
-            if (acceleration <= 0) {
-                acceleration = ACTOR_ACCELERATION_TIME;
-                if (speed < MAX_ACTOR_SPEED) speed += 40;
-            }
-
-            x -= speed * Gdx.graphics.getDeltaTime();
-
-            if (x < 0) {
-                x = 0;
-            }
-        }
-
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) && controllable) {
-            /*if (rotation < 0) {
-                if (rotation > -15) {
-                    x += ACTOR_SPEED * ACTOR_ROTATION_SPEED * Gdx.graphics.getDeltaTime();
-                }
-                else {
-                    x += ACTOR_SPEED * Gdx.graphics.getDeltaTime();
-                }
-            }
-            if (rotation > -30) rotation -= ACTOR_ROTATION_SPEED;*/
-
-            rolls[roll] = new Animation(ACTOR_ANIMATION_TIME, rollSpriteSheet[2]);
-
-            if (rotation > -30) rotation -= ACTOR_ROTATION_SPEED;
-
-            acceleration -= delta;
-            if (acceleration <= 0) {
-                acceleration = ACTOR_ACCELERATION_TIME;
-                if (speed < MAX_ACTOR_SPEED) speed += 40;
-            }
-
-            x += speed * Gdx.graphics.getDeltaTime();
-
-            if (x > Main.GAME_WIDTH - ACTOR_WIDTH * ACTOR_SCALE) {
-                x = Main.GAME_WIDTH - ACTOR_WIDTH * ACTOR_SCALE;
-            }
-        }
+        speed = ACTOR_SPEED_MULTIPLIER * Math.round(Math.abs(rotation));
+        x += rotation > 0 ? -(speed * Gdx.graphics.getDeltaTime()) : speed * Gdx.graphics.getDeltaTime();
 
         rectangleCollision.move(x, y);
 
@@ -212,7 +117,8 @@ public class GameScreen implements Screen {
         // check for collision
         for (Asteroid asteroid : asteroids) {
             if (asteroid.getRectangleCollision().collidesWith(rectangleCollision)) {
-                game.setScreen(new MenuScreen(game));
+                //this.dispose();
+                //game.setScreen(new MenuScreen(game));
             }
         }
 
@@ -224,7 +130,7 @@ public class GameScreen implements Screen {
             asteroid.render(game.batch);
         }
 
-        game.batch.draw((TextureRegion) rolls[roll].getKeyFrame(stateTime, true), x, y, ACTOR_WIDTH * ACTOR_SCALE / 2, ACTOR_HEIGHT * ACTOR_SCALE / 2, ACTOR_WIDTH, ACTOR_HEIGHT, ACTOR_SCALE, ACTOR_SCALE, rotation);
+        game.batch.draw((TextureRegion) rolls[roll].getKeyFrame(stateTime, true), x, y, ACTOR_WIDTH * (ACTOR_SCALE / 2), ACTOR_HEIGHT * ACTOR_SCALE / 2, ACTOR_WIDTH, ACTOR_HEIGHT, ACTOR_SCALE, ACTOR_SCALE, rotation);
 
         game.batch.end();
     }
