@@ -1,25 +1,62 @@
 package com.quoxsii.locus.screens;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.quoxsii.locus.Main;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Group;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.utils.viewport.StretchViewport;
+import com.quoxsii.locus.LocusGame;
 
 public class MenuScreen implements Screen {
     private static final int BUTTON_WIDTH = 150;
     private static final int BUTTON_HEIGHT = 50;
 
-    Main game;
+    LocusGame game;
+    Group group;
+    Stage stage;
+    OrthographicCamera camera;
+    Rectangle playButtonRect, exitButtonRect;
 
-    Texture playButton;
-    Texture exitButton;
-
-    public MenuScreen(Main game) {
+    public MenuScreen(LocusGame game) {
         this.game = game;
-        playButton = new Texture("button_play.png");
-        exitButton = new Texture("button_exit.png");
+        createCamera();
+        stage = new Stage(new StretchViewport(LocusGame.SCREEN_WIDTH, LocusGame.SCREEN_HEIGHT));
+        group = new Group();
+        initButtons();
+    }
+
+    private void initButtons() {
+        int buttonXCenter = LocusGame.SCREEN_WIDTH / 2 - BUTTON_WIDTH / 2;
+        int playButtonYCenter = LocusGame.SCREEN_HEIGHT / 2 - BUTTON_HEIGHT / 2 + 30;
+        int exitButtonYCenter = LocusGame.SCREEN_HEIGHT / 2 - BUTTON_HEIGHT / 2 - 30;
+
+        Actor playButton = new Image(new Texture("button_play.png"));
+        playButton.setSize(BUTTON_WIDTH, BUTTON_HEIGHT);
+        playButton.setName("play_button");
+        playButton.setPosition(buttonXCenter, playButtonYCenter);
+        playButtonRect = new Rectangle(playButton.getX(), playButton.getY(), playButton.getWidth(), playButton.getHeight());
+
+        Actor exitButton = new Image(new Texture("button_exit.png"));
+        exitButton.setSize(BUTTON_WIDTH, BUTTON_HEIGHT);
+        exitButton.setName("exit_button");
+        exitButton.setPosition(buttonXCenter, exitButtonYCenter);
+        exitButtonRect = new Rectangle(exitButton.getX(), exitButton.getY(), exitButton.getWidth(), exitButton.getHeight());
+
+        group.addActor(playButton);
+        group.addActor(exitButton);
+        stage.addActor(group);
+    }
+
+    private void createCamera() {
+        camera = new OrthographicCamera();
+        camera.setToOrtho(false, LocusGame.SCREEN_WIDTH, LocusGame.SCREEN_HEIGHT);
+        camera.update();
     }
 
     @Override
@@ -32,32 +69,20 @@ public class MenuScreen implements Screen {
         Gdx.gl.glClearColor(0.04f, 0.06f, 0.15f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        int buttonXCenter = Main.GAME_WIDTH / 2 - BUTTON_WIDTH / 2;
-        int playButtonYCenter = Main.GAME_HEIGHT / 2 - BUTTON_HEIGHT / 2 + 30;
-        int exitButtonYCenter = Main.GAME_HEIGHT / 2 - BUTTON_HEIGHT / 2 - 30;
-
-        if (Gdx.input.getX() < buttonXCenter + BUTTON_WIDTH
-                && Gdx.input.getX() > buttonXCenter
-                && Main.GAME_HEIGHT - Gdx.input.getY() < playButtonYCenter + BUTTON_HEIGHT
-                && Main.GAME_HEIGHT - Gdx.input.getY() > playButtonYCenter) {
-            if (Gdx.input.isTouched()) {
+        if (Gdx.input.justTouched()) {
+            if (playButtonRect.contains(Gdx.input.getX(), LocusGame.SCREEN_HEIGHT - Gdx.input.getY())) {
                 this.dispose();
                 game.setScreen(new GameScreen(game));
-            }
-        }
-
-        if (Gdx.input.getX() < buttonXCenter + BUTTON_WIDTH
-                && Gdx.input.getX() > buttonXCenter
-                && Main.GAME_HEIGHT - Gdx.input.getY() < exitButtonYCenter + BUTTON_HEIGHT
-                && Main.GAME_HEIGHT - Gdx.input.getY() > exitButtonYCenter) {
-            if (Gdx.input.isTouched()) {
+            } else if (exitButtonRect.contains(Gdx.input.getX(), LocusGame.SCREEN_HEIGHT - Gdx.input.getY())) {
+                this.dispose();
                 Gdx.app.exit();
             }
         }
 
+        game.batch.setProjectionMatrix(camera.combined);
         game.batch.begin();
-        game.batch.draw(playButton, buttonXCenter, playButtonYCenter, BUTTON_WIDTH, BUTTON_HEIGHT);
-        game.batch.draw(exitButton, buttonXCenter, exitButtonYCenter, BUTTON_WIDTH, BUTTON_HEIGHT);
+        stage.draw();
+        stage.act();
         game.batch.end();
     }
 
@@ -83,7 +108,7 @@ public class MenuScreen implements Screen {
 
     @Override
     public void dispose() {
-        playButton.dispose();
-        exitButton.dispose();
+        game.dispose();
+        stage.dispose();
     }
 }
