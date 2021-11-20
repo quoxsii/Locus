@@ -1,4 +1,4 @@
 # Locus
-A simple game created with libGDX where you should try to godge asteroids.
+Простая игра, созданная с помощью libGDX, в которой вы должны уворачиваться от астероидов.
 
 ![Alt Text](https://s8.gifyu.com/images/2021-02-28-21-08-59.gif)
